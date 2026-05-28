@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define ASCII 256
+
+static unsigned char enc[ASCII];
+static unsigned char dec[ASCII];
+static int enc_set[ASCII];
+static int dec_set[ASCII];
+
+static void init_maps(void) {
+    for (int i = 0; i < ASCII; i++) {
+        enc[i] = (unsigned char)i;
+        dec[i] = (unsigned char)i;
+        enc_set[i] = 0;
+        dec_set[i] = 0;
+    }
+}
+
+static void load_key(const char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+        printf("Nelze otevrit key.txt\n");
+        exit(1);
+    }
+
+    char line[256];
+
+    while (fgets(line, sizeof(line), f)) {
+        if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') {
+            continue;
+        }
+
+        unsigned int a, b;
+        if (sscanf(line, " %2x=%2x", &a, &b) == 2) {
+            if (a > 255 || b > 255) {
+                printf("Chyba v key.txt, hodnota mimo rozsah 00 až FF\n");
+                fclose(f);
+                exit(1);
+            }
+
+            if (enc_set[a] && enc[a] != (unsigned char)b) {
+                printf("Duplicitni mapovani pro znak 0x%02X\n", a);
+                fclose(f);
+                exit(1);
+            }
+
+            if (dec_set[b] && dec[b] != (unsigned char)a) {
+                printf("Cilovy znak 0x%02X je pouzit vicekrat\n", b);
+                fclose(f);
+                exit(1);
+            }
+
+            enc[a] = (unsigned char)b;
+            dec[b] = (unsigned char)a;
+            enc_set[a] = 1;
+            dec_set[b] = 1;
+        }
+    }
+
+    fclose(f);
+}
+
+static void process(unsigned char *text, long long rounds, int decrypt) {
+    size_t len = strlen((char *)text);
+
+    for (size_t i = 0; i < len; i++) {
+        unsigned char c = text[i];
+        if ((!decrypt && !enc_set[c]) || (decrypt && !dec_set[c])) {
+            printf("Chybi mapovani pro znak 0x%02X\n", c);
+            exit(1);
+        }
+    }
+
+    for (long long r = 0; r < rounds; r++) {
+        for (size_t i = 0; i < len; i++) {
+            unsigned char c = text[i];
+            text[i] = decrypt ? dec[c] : enc[c];
+        }
+    }
+}
+
+int main(void) {
+    init_maps();
+    load_key("key.txt");
+
+    char text[1024];
+    int mode;
+    long long rounds;
+
+    printf("Zadej text: ");
+    if (!fgets(text, sizeof(text), stdin)) {
+        return 1;
+    }
+    text[strcspn(text, "\n")] = 0;
+
+    printf("1 = sifrovat, 2 = desifrovat: ");
+    if (scanf("%d", &mode) != 1) {
+        return 1;
+    }
+
+    printf("Pocet kol: ");
+    if (scanf("%lld", &rounds) != 1 || rounds < 0) {
+        return 1;
+    }
+
+    if (mode == 1) {
+        process((unsigned char *)text, rounds, 0);
+        printf("Sifrovano: %s\n", text);
+    } else if (mode == 2) {
+        process((unsigned char *)text, rounds, 1);
+        printf("Desifrovano: %s\n", text);
+    } else {
+        printf("Neplatny rezim\n");
+    }
+
+    return 0;
+}
