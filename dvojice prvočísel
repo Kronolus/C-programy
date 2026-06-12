@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+// Funkce pro ověření, zda je číslo prvočíslo
+bool jePrvocislo(int cislo) {
+    if (cislo <= 1) return false;
+    for (int i = 2; i * i <= cislo; i++) {
+        if (cislo % i == 0) {
+            return false; // Číslo je dělitelné jiným číslem, není to prvočíslo
+        }
+    }
+    return true;
+}
+
+// Funkce pro bezpečné načtení kladného celého čísla pomocí getchar
+int nactiKladneCislo() {
+    int cislo = 0;
+    int znak;
+    bool platnyVstup = false;
+
+    while (!platnyVstup) {
+        printf("Zadejte kladne cele cislo N: ");
+        cislo = 0;
+        platnyVstup = true;
+        int pocetZnaku = 0;
+
+        // Čtení vstupu znak po znaku
+        while ((znak = getchar()) != '\n' && znak != EOF) {
+            pocetZnaku++;
+            
+            // Pokud je znak číslice, přidej ho do čísla
+            if (znak >= '0' && znak <= '9') {
+                // Ochrana proti přetečení intu (volitelné, ale bezpečné)
+                if (cislo > 214748364 || (cislo == 214748364 && (znak - '0') > 7)) {
+                    platnyVstup = false;
+                }
+                cislo = cislo * 10 + (znak - '0');
+            } else {
+                // Pokud narazíme na jakýkoliv jiný znak (písmeno, mezeru, mínus, tečku...)
+                platnyVstup = false;
+            }
+        }
+
+        // Kontrola, zda uživatel nezmáčkl jen Enter nebo nezadal 0
+        if (pocetZnaku == 0 || cislo == 0) {
+            platnyVstup = false;
+        }
+
+        if (!platnyVstup) {
+            printf("Neplatny vstup! Musite zadat pouze kladne cele cislo.\n\n");
+        }
+    }
+
+    return cislo;
+}
+
+int main() {
+    printf("--- HLEDANI PRVOCISELNYCH DVOJIC ---\n");
+    
+    // Načtení validního čísla N od uživatele
+    int N = nactiKladneCislo();
+
+    printf("\nPrvociselne dvojice mensi nez %d jsou:\n", N);
+    printf("----------------------------------------\n");
+
+    int pocetDvojic = 0;
+
+    // Procházíme čísla a hledáme dvojice (p a p + 2)
+    // Obě čísla musí být striktně menší než N, proto: i + 2 < N
+    for (int i = 2; i + 2 < N; i++) {
+        if (jePrvocislo(i) && jePrvocislo(i + 2)) {
+            printf("(%d, %d)\n", i, i + 2);
+            pocetDvojic++;
+        }
+    }
+
+    if (pocetDvojic == 0) {
+        printf("V tomto rozsahu se nenachazi zadne prvociselne dvojice.\n");
+    } else {
+        printf("----------------------------------------\n");
+        printf("Celkem nalezeno dvojic: %d\n", pocetDvojic);
+    }
+
+    return 0;
+}
