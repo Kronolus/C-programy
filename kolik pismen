@@ -1,0 +1,25 @@
+#include <stdio.h>
+
+int main() {
+    char znak;
+    char hledane;
+    int pocet = 0;
+
+    printf("Zadej pismeno, ktere chces pocitat:\n");
+    scanf(" %c", &hledane);
+
+    printf("Zadej vetu ukoncenou teckou:\n");
+
+    do {
+        scanf("%c", &znak);
+
+        if (znak == hledane) {
+            pocet++;
+        }
+
+    } while (znak != '.');
+
+    printf("Pismeno '%c' se ve vete vyskytuje %dkrat.\n", hledane, pocet);
+
+    return 0;
+}
