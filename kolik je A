@@ -1,0 +1,21 @@
+#include <stdio.h>
+
+int main() {
+    char znak;
+    int pocet = 0;
+
+    printf("Zadej vetu ukoncenou teckou:\n");
+
+    do {
+        scanf("%c", &znak);
+
+        if (znak == 'A') {
+            pocet++;
+        }
+
+    } while (znak != '.');
+
+    printf("Pismeno 'A' se ve vete vyskytuje %dkrat.\n", pocet);
+
+    return 0;
+}
